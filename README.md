@@ -8,8 +8,8 @@
 
 ### How to use
 
-1.input folder path
-2.click load
-3.select image
-4.edit tagger
-5.save
+1.input folder path  
+2.click load  
+3.select image  
+4.edit tagger  
+5.save  
