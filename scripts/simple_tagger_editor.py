@@ -44,6 +44,7 @@ dir=''
 def loadBtnClick(dir_tb):
     global pngs
     global dir
+    pngs=[]
     dir=dir_tb
     files=os.listdir(dir_tb)
     for f in files:
@@ -68,11 +69,19 @@ def gallerySelect(evt:gr.SelectData):
         result=result.replace(s,'')
     if add not in result:
         result=result+','+add
+
+    # remove comma 
     result=re.sub(r',\s+,',',',result)
     result=re.sub(r',\s+,',',',result)# cause by prev line
     result=re.sub(r',,',',',result)
     result=re.sub(r',,',',',result)
+    if result[0]==',':
+        result=result[1:]
+    if result[0]==' ':
+        result=result[1:]
+
     if result!=t:
+        print('replace',file_name)
         with open(os.path.join(dir,file_name+'.txt'),'w') as ff:
             ff.write(result)
     return result
