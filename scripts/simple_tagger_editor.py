@@ -16,8 +16,8 @@ def on_ui_tabs():
             with gr.Column():
                 gallery=gr.Gallery().style(columns=3)
             with gr.Column():
-                add_tb=gr.Textbox(label="Additional tags")
-                remove_tb=gr.Textbox(label="Exclude tags (split by comma)")
+                add_tb=gr.Textbox(label="Additional tags (split by comma) (first letter is comma add at the end)")
+                remove_tb=gr.Textbox(label="Exclude tags (split by comma) (regular expression support `(` escaped as `\(` )")
                 tagger_tb=gr.Textbox(label="Tagger")
                 save_btn=gr.Button(value="Save",variant="primary")
         load_btn.click(fn=loadBtnClick,inputs=dir_tb,outputs=gallery)
@@ -48,7 +48,7 @@ def loadBtnClick(dir_tb):
     dir=dir_tb
     files=os.listdir(dir_tb)
     for f in files:
-        if 'txt' not in f:
+        if 'txt' not in f and 'npz' not in f:
             pngs.append(f)
     result=[os.path.join(dir_tb,l) for l in pngs]
     return result
@@ -66,19 +66,37 @@ def gallerySelect(evt:gr.SelectData):
         t=f.read()
     result=t
     for s in removes:
-        result=result.replace(s,'')
-    if add not in result:
-        result=result+','+add
+        r=re.compile(s.strip())
+        result=re.sub(r,'',result)#result.replace(r,'')
+
+    adds=[]
+    is_add2front=True
+    if add and add[0]==',':
+        adds=add[1:].split(',')
+        is_add2front=False
+    elif add:
+        adds=add.split(',')
+        adds.reverse()
+    for a in adds:
+        r=a.strip()
+        if r not in result:
+            if is_add2front:
+                result=r+', '+result
+            else:
+                result=result+', '+r
 
     # remove comma 
     result=re.sub(r',\s+,',',',result)
     result=re.sub(r',\s+,',',',result)# cause by prev line
     result=re.sub(r',,',',',result)
     result=re.sub(r',,',',',result)
+    result=result.strip()
     if result[0]==',':
         result=result[1:]
-    if result[0]==' ':
-        result=result[1:]
+    if result[-1:]==',':
+        result=result[:-1]
+    result=result.strip()
+
 
     if result!=t:
         print('replace',file_name)
