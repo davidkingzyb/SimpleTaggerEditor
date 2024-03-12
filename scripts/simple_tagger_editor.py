@@ -4,14 +4,27 @@ import modules.scripts as scripts
 import gradio as gr
 import os
 import re
+from tkinter import filedialog, Tk
+
 
 from modules import script_callbacks
 
 def on_ui_tabs():
     with gr.Blocks(analytics_enabled=False) as ui_component:
         with gr.Row():
-            dir_tb=gr.Textbox(label="Input directory")
-            load_btn=gr.Button(value="Load",variant="primary")
+            with gr.Column():
+                dir_tb=gr.Textbox(label="Input directory")
+            with gr.Row():
+                folder_btn = gr.Button(
+                    '📂'
+                )
+                folder_btn.click(
+                    folderBtnClick,
+                    outputs=dir_tb,
+                    show_progress=False,
+                )
+                load_btn=gr.Button(value="Load",variant="primary")
+                save_all_btn=gr.Button(value="Save All")
         with gr.Row():
             with gr.Column():
                 gallery=gr.Gallery().style(columns=3)
@@ -20,7 +33,7 @@ def on_ui_tabs():
                 remove_tb=gr.Textbox(label="Exclude tags (split by comma) (regular expression support `(` escaped as `\(` )")
                 tagger_tb=gr.Textbox(label="Tagger")
                 save_btn=gr.Button(value="Save",variant="primary")
-                save_all_btn=gr.Button(value="Save All")
+                
         load_btn.click(fn=loadBtnClick,inputs=dir_tb,outputs=gallery)
         gallery.select(gallerySelect,None,tagger_tb)
         save_btn.click(fn=saveClick,inputs=tagger_tb)
@@ -30,6 +43,16 @@ def on_ui_tabs():
         return [(ui_component, "Tagger Editor", "taggers_editor_tab")]
 
 script_callbacks.on_ui_tabs(on_ui_tabs)
+
+def folderBtnClick():
+
+    root = Tk()
+    root.wm_attributes("-topmost", 1)
+    root.withdraw()
+    folder_path = filedialog.askdirectory()
+    root.destroy()
+    return folder_path
+
 
 adds=[]
 def addBlur(i):
