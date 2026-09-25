@@ -4,12 +4,6 @@ import os
 import re
 from tkinter import filedialog, Tk
 
-try:
-    from modules import script_callbacks
-    script_callbacks.on_ui_tabs(on_ui_tabs)
-except Exception as err:
-    print("not in webui")
-
 def on_ui_tabs():
     with gr.Blocks(analytics_enabled=False) as ui_component:
         with gr.Row():
@@ -44,6 +38,11 @@ def on_ui_tabs():
         remove_tb.blur(fn=removeBlur,inputs=remove_tb)
         return [(ui_component, "Tagger Editor", "taggers_editor_tab")]
 
+try:
+    from modules import script_callbacks
+    script_callbacks.on_ui_tabs(on_ui_tabs)
+except Exception as err:
+    print("not in webui")
 
 def folderBtnClick():
     root = Tk()
@@ -83,8 +82,11 @@ def saveAllClick():
     global dir
     for png in pngs:
         file_name=os.path.join(dir,png.split('.')[0]+'.txt')
-        with open(file_name,'r') as f:
-            t=f.read()
+        if os.path.exists(file_name):
+            with open(file_name,'r') as f:
+                t=f.read()
+        else:
+            t=""
         result=_doRemove(t)
         result=_doAdd(result)
         result=_format(result)
@@ -122,8 +124,6 @@ def _format(tag):
             result.append(t.strip())
     return ', '.join(result)
 
-    
-    
 file_name=''   
 def gallerySelect(evt:gr.SelectData):
     global pngs
@@ -131,9 +131,12 @@ def gallerySelect(evt:gr.SelectData):
     global file_name
     file_name=pngs[evt.index].split('.')[0]
     print('select',file_name)
-    with open(os.path.join(dir,file_name+'.txt')) as f:
-        t=f.read()
-
+    _p=os.path.join(dir,file_name+'.txt')
+    if os.path.exists(_p):
+        with open(_p,'r') as f:
+            t=f.read()
+    else:
+        t=""
     result=_doRemove(t)
     result=_doAdd(result)
     result=_format(result)
@@ -164,6 +167,6 @@ if __name__ == "__main__":
         # 启动独立的 Gradio Web 界面
         # share=False: 不生成公网链接
         # inbrowser=True: 启动后自动在浏览器中打开
-        app.launch(share=False, inbrowser=True)
+        app.launch(share=False, inbrowser=True, allowed_paths=["C:\\Users\\DKZ\\Desktop"])
     else:
         print("Failed to create UI component.")
