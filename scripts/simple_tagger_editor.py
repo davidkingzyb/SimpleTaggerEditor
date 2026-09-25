@@ -1,13 +1,14 @@
-# 2024/2/25 by DKZ
 
-import modules.scripts as scripts
 import gradio as gr
 import os
 import re
 from tkinter import filedialog, Tk
 
-
-from modules import script_callbacks
+try:
+    from modules import script_callbacks
+    script_callbacks.on_ui_tabs(on_ui_tabs)
+except Exception as err:
+    print("not in webui")
 
 def on_ui_tabs():
     with gr.Blocks(analytics_enabled=False) as ui_component:
@@ -27,7 +28,8 @@ def on_ui_tabs():
                 save_all_btn=gr.Button(value="Save All")
         with gr.Row():
             with gr.Column():
-                gallery=gr.Gallery().style(columns=3)
+                # 优化：将 .style(columns=3) 改为直接传入参数，兼容新版 Gradio
+                gallery=gr.Gallery(columns=3) 
             with gr.Column():
                 add_tb=gr.Textbox(label="Additional tags (split by comma) (first letter is $ add at the end)")
                 remove_tb=gr.Textbox(label="Exclude tags (split by comma) (regular expression support `(` escaped as `\(` )")
@@ -42,10 +44,8 @@ def on_ui_tabs():
         remove_tb.blur(fn=removeBlur,inputs=remove_tb)
         return [(ui_component, "Tagger Editor", "taggers_editor_tab")]
 
-script_callbacks.on_ui_tabs(on_ui_tabs)
 
 def folderBtnClick():
-
     root = Tk()
     root.wm_attributes("-topmost", 1)
     root.withdraw()
@@ -148,3 +148,22 @@ def saveClick(tagger_tb):
     print('save',file_name)
     with open(os.path.join(dir,file_name+'.txt'),'w') as f:
         f.write(tagger_tb)
+
+
+# ================= 新增部分：支持独立运行 =================
+if __name__ == "__main__":
+    # 调用 on_ui_tabs 获取构建好的 UI 组件
+    ui_tabs = on_ui_tabs()
+    
+    if ui_tabs:
+        # on_ui_tabs 返回的格式是 [(ui_component, "Title", "Tab_ID")]
+        # 我们提取出第一个元素中的 ui_component (即 gr.Blocks 实例)
+        app = ui_tabs[0][0]
+        
+        print("Starting standalone Tagger Editor...")
+        # 启动独立的 Gradio Web 界面
+        # share=False: 不生成公网链接
+        # inbrowser=True: 启动后自动在浏览器中打开
+        app.launch(share=False, inbrowser=True)
+    else:
+        print("Failed to create UI component.")
